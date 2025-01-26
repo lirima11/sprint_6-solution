@@ -1,0 +1,101 @@
+package tests;
+
+import main.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class HistoryManagerTest {
+
+    private HistoryManager historyManager;
+
+    @BeforeEach
+    void setUp() {
+        historyManager = new InMemoryHistoryManager();
+    }
+
+    @Test
+    public void historyManagerSavesTaskVersions() {
+        Task task = new Task("Test Task", "Description", TaskStatus.NEW);
+
+        historyManager.add(task);
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "История должна содержать одну задачу.");
+        assertEquals(task, history.get(0), "История должна содержать корректную версию задачи.");
+    }
+
+    @Test
+    public void historyManagerDoesNotAllowDuplicates() {
+        Task task = new Task("Test Task", "Description", TaskStatus.NEW);
+
+        historyManager.add(task);
+        historyManager.add(task); // Повторный просмотр задачи
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "История не должна содержать дубликатов.");
+        assertEquals(task, history.get(0), "Задача должна быть в истории только один раз.");
+    }
+
+    @Test
+    public void historyManagerRemovesTaskCorrectly() {
+        Task task1 = new Task("Task 1", "Description 1", TaskStatus.NEW);
+        Task task2 = new Task("Task 2", "Description 2", TaskStatus.NEW);
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+
+        historyManager.remove(task1.getId()); // Удаляем первую задачу
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "История должна содержать одну задачу после удаления.");
+        assertEquals(task2, history.get(0), "Оставшаяся задача должна быть второй.");
+    }
+
+    @Test
+    public void historyManagerHandlesEmptyHistory() {
+        List<Task> history = historyManager.getHistory();
+        assertNotNull(history, "История не должна быть null.");
+        assertTrue(history.isEmpty(), "История должна быть пустой.");
+    }
+
+    @Test
+    public void historyManagerPreservesOrderOfTasks() {
+        Task task1 = new Task("Task 1", "Description 1", TaskStatus.NEW);
+        Task task2 = new Task("Task 2", "Description 2", TaskStatus.NEW);
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(2, history.size(), "История должна содержать две задачи.");
+        assertEquals(task1, history.get(0), "Первая задача должна быть добавлена первой.");
+        assertEquals(task2, history.get(1), "Вторая задача должна быть добавлена второй.");
+    }
+
+    @Test
+    public void historyManagerUpdatesOrderOnRevisit() {
+        Task task1 = new Task("Task 1", "Description 1", TaskStatus.NEW);
+        Task task2 = new Task("Task 2", "Description 2", TaskStatus.NEW);
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(task1); // Повторный просмотр первой задачи
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(2, history.size(), "История должна содержать две задачи.");
+        assertEquals(task2, history.get(0), "Вторая задача должна остаться на своём месте.");
+        assertEquals(task1, history.get(1), "Первая задача должна переместиться в конец.");
+    }
+
+    @Test
+    public void historyManagerWorksWithNullTask() {
+        historyManager.add(null); // Добавляем null
+
+        List<Task> history = historyManager.getHistory();
+        assertTrue(history.isEmpty(), "История не должна содержать null.");
+    }
+}

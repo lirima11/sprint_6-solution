@@ -1,0 +1,117 @@
+package tests;
+
+import main.*;
+import manager.TaskManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class TaskManagerTest {
+
+    private TaskManager taskManager;
+
+    @BeforeEach
+    void setUp() {
+        taskManager = Managers.getDefault();
+    }
+
+    @Test
+    public void managersReturnsInitializedTaskManager() {
+        assertNotNull(taskManager, "TaskManager должен быть проинициализирован.");
+    }
+
+    @Test
+    public void inMemoryTaskManagerAddsAndFindsTasksById() {
+        Task task = new Task("Test Task", "Description", TaskStatus.NEW);
+        taskManager.createTask(task);
+
+        Task foundTask = taskManager.getTask(task.getId());
+        assertNotNull(foundTask, "Задача должна быть найдена по id.");
+        assertEquals(task, foundTask, "Найденная задача должна совпадать с добавленной.");
+    }
+
+    @Test
+    public void tasksWithGeneratedAndGivenIdsDoNotConflict() {
+        Task task1 = new Task("Test Task 1", "Description 1", TaskStatus.NEW);
+        Task task2 = new Task("Test Task 2", "Description 2", TaskStatus.NEW);
+
+        taskManager.createTask(task1);
+        taskManager.createTask(task2);
+
+        Task taskById1 = taskManager.getTask(task1.getId());
+        Task taskById2 = taskManager.getTask(task2.getId());
+
+        assertNotNull(taskById1, "Задача с id 1 должна быть найдена.");
+        assertNotNull(taskById2, "Задача с id 2 должна быть найдена.");
+        assertNotEquals(taskById1, taskById2, "Задачи с разными id не должны конфликтовать.");
+    }
+
+    @Test
+    public void taskRemainsUnchangedWhenAddedToManager() {
+        Task task = new Task("Test Task", "Original Description", TaskStatus.NEW);
+        taskManager.createTask(task);
+
+        Task storedTask = taskManager.getTask(task.getId());
+        assertEquals(task.getTitle(), storedTask.getTitle(), "Название задачи не должно изменяться.");
+        assertEquals(task.getDescription(), storedTask.getDescription(), "Описание задачи не должно изменяться.");
+        assertEquals(task.getStatus(), storedTask.getStatus(), "Статус задачи не должен изменяться.");
+    }
+
+    @Test
+    public void subtasksShouldBeRemovedWithEpic() {
+        Epic epic = new Epic("Test Epic", "Epic Description");
+        taskManager.createEpic(epic);
+
+        Subtask subtask1 = new Subtask("Subtask 1", "Description 1", TaskStatus.NEW, epic.getId());
+        Subtask subtask2 = new Subtask("Subtask 2", "Description 2", TaskStatus.NEW, epic.getId());
+
+        taskManager.createSubtask(subtask1);
+        taskManager.createSubtask(subtask2);
+
+        taskManager.removeEpic(epic.getId());
+
+        assertNull(taskManager.getEpic(epic.getId()), "Эпик должен быть удалён.");
+        assertNull(taskManager.getSubtask(subtask1.getId()), "Подзадача 1 должна быть удалена вместе с эпиком.");
+        assertNull(taskManager.getSubtask(subtask2.getId()), "Подзадача 2 должна быть удалена вместе с эпиком.");
+    }
+
+    @Test
+    public void epicShouldNotContainOutdatedSubtasks() {
+        Epic epic = new Epic("Test Epic", "Epic Description");
+        taskManager.createEpic(epic);
+
+        Subtask subtask = new Subtask("Subtask", "Description", TaskStatus.NEW, epic.getId());
+        taskManager.createSubtask(subtask);
+
+        taskManager.removeSubtask(subtask.getId());
+
+        assertTrue(epic.getSubtaskIds().isEmpty(), "Эпик не должен содержать ID удалённой подзадачи.");
+    }
+
+    @Test
+    public void historyShouldUpdateCorrectlyOnTaskDeletion() {
+        Task task = new Task("Test Task", "Description", TaskStatus.NEW);
+        taskManager.createTask(task);
+
+        taskManager.getTask(task.getId()); // Добавляем в историю
+        taskManager.removeTask(task.getId()); // Удаляем задачу
+
+        List<Task> history = taskManager.getHistory();
+        assertTrue(history.isEmpty(), "История должна быть пустой после удаления задачи.");
+    }
+
+    @Test
+    public void historyShouldNotContainDuplicates() {
+        Task task = new Task("Test Task", "Description", TaskStatus.NEW);
+        taskManager.createTask(task);
+
+        taskManager.getTask(task.getId());
+        taskManager.getTask(task.getId()); // Повторный просмотр
+
+        List<Task> history = taskManager.getHistory();
+        assertEquals(1, history.size(), "История не должна содержать дубликатов задач.");
+    }
+}
