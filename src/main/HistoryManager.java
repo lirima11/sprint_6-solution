@@ -1,3 +1,5 @@
+package src.main;
+
 import java.util.List;
 
 public interface HistoryManager {

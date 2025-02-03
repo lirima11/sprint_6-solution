@@ -1,3 +1,5 @@
+package src.main;
+
 class Node<T> {
     T data;
     Node<T> prev;
@@ -7,3 +9,4 @@ class Node<T> {
         this.data = data;
     }
 }
+
