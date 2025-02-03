@@ -1,7 +1,7 @@
-package main;
+package src.main;
 
-import manager.InMemoryTaskManager;
-import manager.TaskManager;
+import src.manager.InMemoryTaskManager;
+import src.manager.TaskManager;
 public class Managers {
     private Managers() {
     }

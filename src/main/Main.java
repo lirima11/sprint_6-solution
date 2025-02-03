@@ -1,6 +1,8 @@
-package main;
+package src.main;
 
-import manager.TaskManager;
+
+import main.TaskStatus;
+import src.manager.TaskManager;
 
 public class Main {
     public static void main(String[] args) {

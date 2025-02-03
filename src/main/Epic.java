@@ -1,4 +1,6 @@
-package main;
+package src.main;
+
+import main.TaskStatus;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,6 @@
-package main;
+package src.main;
+
+import main.TaskStatus;
 
 public class Task {
     protected int id;

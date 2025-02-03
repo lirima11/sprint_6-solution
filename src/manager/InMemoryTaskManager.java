@@ -1,6 +1,7 @@
-package manager;
+package src.manager;
 
-import main.*;
+import main.TaskStatus;
+import src.main.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
